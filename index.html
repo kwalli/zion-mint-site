@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZionNFT Mint</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+  <h1>ZionNFT Minting Page</h1>
+  <button onclick="connectWallet()">Connect Wallet</button>
+  <br><br>
+  <button onclick="mintNFT()">Mint NFT (0.01 ETH)</button>
+
+  <p id="status"></p>
+
+  <script>
+    let provider;
+    let signer;
+    let contract;
+
+    const contractAddress = "0xa9592ae98c5419001d27757b50df8270705d481e"; // your contract address
+    const contractABI = [
+      "function mint() payable",
+      "function totalSupply() view returns (uint256)",
+      "function mintedCount(address) view returns (uint256)"
+    ];
+
+    async function connectWallet() {
+      try {
+        if (!window.ethereum) throw new Error("MetaMask not found. Please install MetaMask.");
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        document.getElementById("status").innerText = "Wallet connected!";
+      } catch (err) {
+        document.getElementById("status").innerText = err.message;
+      }
+    }
+
+    async function mintNFT() {
+      if (!contract) return alert("Please connect wallet first.");
+      try {
+        const tx = await contract.mint({
+          value: ethers.utils.parseEther("0.01")
+        });
+        document.getElementById("status").innerText = "Minting... please wait.";
+        await tx.wait();
+        document.getElementById("status").innerText = "NFT minted successfully!";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").innerText = "Error: " + (err.reason || err.message);
+      }
+    }
+  </script>
+</body>
+</html>
